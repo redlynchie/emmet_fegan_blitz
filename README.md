@@ -5,11 +5,18 @@ crests, fixtures, and on-the-day info.
 
 ## Files
 
-- `index.html` — the whole site (HTML, CSS, JS, and crest images all in
-  one file — the crests are embedded as base64 data, so there's nothing
-  else to keep alongside it).
+- `index.html` — the page markup and JS. The crest images are embedded
+  as base64 data directly in the `teams` array, so there are no separate
+  image files to keep track of for those.
+- `style.css` — all the site's styling, kept in its own file so
+  `index.html` stays readable.
 - `assets/badges/` — the original crest image files, kept here for
   reference in case you want to swap one out or re-export.
+
+Note: because the CSS now lives in `style.css`, keep the two files
+together when copying or sharing the site — `index.html` alone is no
+longer fully self-contained (the crest images still are, since those
+stay embedded as base64 data).
 
 ## Editing the content
 
