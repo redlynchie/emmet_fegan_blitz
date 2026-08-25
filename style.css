@@ -3,6 +3,7 @@
   --pitch-green-dark: #081F42;
   --chalk: #F5F6FA;
   --score-amber: #FDBB11;
+  --live-red: #E5384B;
   --ink-soft: rgba(245,246,250,0.68);
   --hairline: rgba(245,246,250,0.18);
   --radius: 2px;
@@ -409,6 +410,32 @@ ol.team-list .tname{ color: var(--chalk); }
   box-shadow: 0 0 0 2px rgba(253,187,17,0.25);
 }
 
+/* ---------- Live Fixtures ---------- */
+.live-status{
+  display:flex; align-items:center; gap: 10px;
+  margin-bottom: 22px;
+  font-family:'Roboto Mono', monospace;
+  font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.live-beacon{
+  width: 12px; height: 12px; border-radius: 50%; flex: none;
+  background: rgba(245,246,250,0.25);
+}
+.live-status.is-live{ color: var(--chalk); }
+.live-status.is-live .live-beacon{
+  background: var(--live-red);
+  animation: beacon-pulse 1.6s ease-out infinite;
+}
+@keyframes beacon-pulse{
+  0%{ box-shadow: 0 0 0 0 rgba(229,56,75,0.55); }
+  70%{ box-shadow: 0 0 0 10px rgba(229,56,75,0); }
+  100%{ box-shadow: 0 0 0 0 rgba(229,56,75,0); }
+}
+@media (prefers-reduced-motion: reduce){
+  .live-status.is-live .live-beacon{ animation:none; }
+}
+
 .fixtures-empty{
   padding: 40px 20px;
   text-align: center;
@@ -419,6 +446,13 @@ ol.team-list .tname{ color: var(--chalk); }
 }
 
 .fround-short, .fpitch-short{ display:none; }
+
+/* ---------- Pitches ---------- */
+.pitches-map{
+  display:block;
+  width:100%; height:auto;
+  border: 1px solid var(--hairline);
+}
 
 @media (max-width: 640px){
   .fixture-row{

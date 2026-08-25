@@ -64,6 +64,86 @@ want to fill in:
 <span class="value" id="meta-throwin">10:00</span>
 ```
 
+## Live Fixtures
+
+The "Live Fixtures" section (shown before Groups) lists whichever
+matches are currently on the pitch, by checking the visitor's clock
+against each fixture's time range in `FIXTURE_LIST`. It shows a red
+pulsing beacon when a round is in progress, and a grey beacon with "No
+games currently in progress" otherwise. It refreshes every 30 seconds
+on its own. From 12:05 (ten minutes after the last round ends at
+11:55) it instead shows a "Fixtures finished" message for one hour,
+until 13:05 — after that it quietly reverts to the normal idle "No
+games currently in progress" state. That window is set by
+`FIXTURES_DONE_START` and `FIXTURES_DONE_DURATION_MIN` near
+`renderLiveFixtures`.
+
+It's also gated to a single calendar date — the section and its "Live"
+nav links stay hidden (`display: none`) on every day except the one set
+in `EVENT_DATE` near the top of the `<script>` tag:
+
+```js
+const EVENT_DATE = { year: 2026, month: 7, day: 29 }; // month is 0-indexed: 7 = August
+```
+
+Update `EVENT_DATE` if the blitz date ever changes.
+
+### Testing it before/after the event
+
+Since the gate and the round times both key off the real clock, you
+can't just load the page to see it on any other day. Open the page,
+open the browser console (Cmd+Option+J in Chrome, or right-click →
+Inspect → Console), and fake the clock:
+
+Paste this **once** per page load to set it up:
+
+```js
+const RealDate = Date;
+function setFakeNow(y, mo, d, h, mi) {
+  Date = function(...args) {
+    return args.length ? new RealDate(...args) : new RealDate(y, mo, d, h, mi, 0);
+  };
+}
+
+// Jump to 10:05 on event day (inside Round 1, 10:00-10:15) and re-render:
+setFakeNow(2026, 7, 29, 10, 5);
+applyLiveVisibility();
+renderLiveFixtures();
+```
+
+To change the simulated time after that, only run this (do **not**
+paste the block above a second time — see the warning below):
+
+```js
+setFakeNow(2026, 7, 29, 11, 20); // Round 5
+applyLiveVisibility();
+renderLiveFixtures();
+```
+
+- Change the date args (`2026, 7, 29`) to a non-event day to confirm
+  the section and nav links disappear.
+- Pick a time outside any round's window but before 12:05 (e.g.
+  `11, 58, 0`) to see the idle "No games currently in progress" state.
+- Pick a time between 12:05 and 13:05 (e.g. `12, 30, 0`) to see the
+  "Fixtures finished" message.
+- Pick a time after 13:05 (e.g. `13, 10, 0`) to confirm it reverts back
+  to the idle state.
+- Reload the page afterwards to drop the fake clock and go back to
+  normal — nothing is saved to the file.
+
+**Warning — don't re-paste the setup block:** Chrome's console shares
+`const`/`let` bindings across separate pastes in the same session
+rather than treating each paste as its own scope. If you paste the
+`const RealDate = Date; function setFakeNow(...) {...}` block a second
+time, `RealDate` gets reassigned to the already-overridden `Date`, so
+the override ends up calling itself and crashes with `RangeError:
+Maximum call stack size exceeded`. If that happens, just reload the
+page and paste the setup block fresh — after the first paste, only
+ever call `setFakeNow(...)` again to change the time.
+
+On the day itself, no console tricks are needed — it reads the real
+system clock automatically.
+
 ## Running locally
 
 No build tools needed — just open `index.html` in a browser.
