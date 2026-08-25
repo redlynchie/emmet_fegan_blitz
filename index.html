@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>U10 Emmett Fegan Memorial Blitz | Mullahoran GFC</title>
+<link rel="icon" type="image/png" href="assets/badges/Mullahoran.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -15,8 +16,10 @@
   <div class="wrap topbar-inner">
     <a class="brandmark" href="#top"><span class="dot"></span>EMMETT&nbsp;FEGAN&nbsp;U10&nbsp;BLITZ</a>
     <nav class="toplinks">
+      <a href="#live-fixtures" class="nav-live">Live</a>
       <a href="#groups">Groups</a>
       <a href="#fixtures">Fixtures</a>
+      <a href="#pitches">Pitches</a>
       <a href="#info">Info</a>
       <a href="#rules">Rules</a>
     </nav>
@@ -25,8 +28,10 @@
     </button>
   </div>
   <nav class="mobile-nav" id="mobile-nav">
+    <a href="#live-fixtures" class="nav-live">Live</a>
     <a href="#groups">Groups</a>
     <a href="#fixtures">Fixtures</a>
+    <a href="#pitches">Pitches</a>
     <a href="#info">Info</a>
     <a href="#rules">Rules</a>
   </nav>
@@ -72,6 +77,20 @@
     <div class="crest-parade reveal" id="crest-parade"></div>
   </section>
 
+  <section id="live-fixtures">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Live Fixtures</h2>
+        <p class="section-note">Games run 10:00–12:00 — this updates automatically as rounds kick off.</p>
+      </div>
+      <div class="live-status" id="live-status">
+        <span class="live-beacon" id="live-beacon" aria-hidden="true"></span>
+        <span id="live-status-text">Checking…</span>
+      </div>
+      <div class="fixtures-table" id="live-fixtures-table"></div>
+    </div>
+  </section>
+
   <section id="groups">
     <div class="wrap">
       <div class="section-head">
@@ -100,6 +119,16 @@
     </div>
   </section>
 
+  <section id="pitches">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Pitches</h2>
+        <p class="section-note">Layout of Pitches 1–6 at Mullahoran GAA grounds.</p>
+      </div>
+      <img class="pitches-map" src="assets/Pitches.jpeg" alt="Satellite map of Mullahoran GAA grounds showing the layout of Pitches 1 to 6">
+    </div>
+  </section>
+
   <section id="info">
     <div class="wrap">
       <div class="section-head">
@@ -112,7 +141,7 @@
         </div>
         <div class="info-card">
           <h3>Format</h3>
-          <p>16 teams in two groups of eight — one group on the Main Pitch, one on the Training Field. Each team plays 4 games, selected at random. No knockout games or finals.</p>
+          <p>16 teams in two groups of eight — Group A on the Main Pitch, Group B on the Training Field. Each team plays 4 games, selected at random. No knockout games or finals.</p>
         </div>
         <div class="info-card">
           <h3>Refreshments</h3>
@@ -173,10 +202,9 @@
           </ul>
         </div>
         <div class="rule-card">
-          <h3>Entry &amp; Contact</h3>
+          <h3>Contact</h3>
           <ul>
             <li>Pauric Lynch <a href="tel:+353830840114">083 084 0114</a></li>
-            <li>Conleth Reilly <a href="tel:+353877770571">087 777 0571</a></li>
           </ul>
         </div>
       </div>
@@ -269,6 +297,9 @@
   ];
   // ---------------------------------------------------------------
 
+  // Live Fixtures only appears on this calendar date (month is 0-indexed: 7 = August).
+  const EVENT_DATE = { year: 2026, month: 7, day: 29 };
+
   const GROUP_PITCH_NAMES = { A: 'Main Pitch', B: 'Training Field' };
 
   function byGroup(teamList){
@@ -360,6 +391,108 @@
     }).join('');
   }
 
+  // Live Fixtures: a game is "in progress" when the current wall-clock
+  // time falls inside its round's time range (e.g. "10:00–10:15").
+  function timeToMinutes(str){
+    const [h, m] = str.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  function getLiveFixtures(){
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    return fixtures.filter(f => {
+      const [startStr, endStr] = f.time.split('–');
+      return nowMinutes >= timeToMinutes(startStr) && nowMinutes < timeToMinutes(endStr);
+    });
+  }
+
+  // Finds the start time (in minutes) of the next round yet to begin, or
+  // null if every round has already started (used during breaks between games).
+  function getNextRoundStart(){
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const upcoming = fixtures
+      .map(f => timeToMinutes(f.time.split('–')[0]))
+      .filter(start => start > nowMinutes);
+    return upcoming.length ? Math.min(...upcoming) : null;
+  }
+
+  function minutesToTimeStr(mins){
+    const h = Math.floor(mins / 60).toString().padStart(2, '0');
+    const m = (mins % 60).toString().padStart(2, '0');
+    return `${h}:${m}`;
+  }
+
+  // The last round ends at 11:55; from 12:05 a "fixtures finished" message
+  // shows in place of the live table, for 1 hour (until 13:05).
+  const FIXTURES_DONE_START = timeToMinutes('12:05');
+  const FIXTURES_DONE_DURATION_MIN = 60;
+
+  function isFixturesDoneWindow(){
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    return nowMinutes >= FIXTURES_DONE_START && nowMinutes < FIXTURES_DONE_START + FIXTURES_DONE_DURATION_MIN;
+  }
+
+  function isEventDay(){
+    const now = new Date();
+    return now.getFullYear() === EVENT_DATE.year &&
+      now.getMonth() === EVENT_DATE.month &&
+      now.getDate() === EVENT_DATE.day;
+  }
+
+  // Live Fixtures (and its nav links) stay hidden until the day of the blitz.
+  function applyLiveVisibility(){
+    const show = isEventDay();
+    document.getElementById('live-fixtures').style.display = show ? '' : 'none';
+    document.querySelectorAll('.nav-live').forEach(a => { a.style.display = show ? '' : 'none'; });
+  }
+
+  function renderLiveFixtures(){
+    const statusWrap = document.getElementById('live-status');
+    const statusText = document.getElementById('live-status-text');
+    const table = document.getElementById('live-fixtures-table');
+
+    if(isFixturesDoneWindow()){
+      statusWrap.classList.remove('is-live');
+      statusText.textContent = 'Fixtures finished';
+      table.innerHTML = `<div class="fixtures-empty">All games are complete — Thanks for coming out! See you next year.</div>`;
+      return;
+    }
+
+    const live = getLiveFixtures();
+
+    if(live.length === 0){
+      statusWrap.classList.remove('is-live');
+      const nextStart = getNextRoundStart();
+      statusText.textContent = nextStart !== null
+        ? `The next game is starting at ${minutesToTimeStr(nextStart)}`
+        : 'No games currently in progress';
+      table.innerHTML = '';
+      return;
+    }
+
+    statusWrap.classList.add('is-live');
+    statusText.textContent = `Round ${live[0].round} in progress — ${live.length} game${live.length > 1 ? 's' : ''} live`;
+
+    table.innerHTML = live.map(f => `
+      <div class="fixture-row">
+        <span class="fround">
+          <span class="fround-full">R${f.round}<br><span class="ftime">${f.time}</span></span>
+          <span class="fround-short">R${f.round}<span class="ftime-short">${f.time.split('–')[0]}</span></span>
+        </span>
+        <span class="fteam right"><span class="fteam-name">${f.teamA.name}</span>${badge(f.teamA, true)}</span>
+        <span class="fvs">v</span>
+        <span class="fteam">${badge(f.teamB, true)}<span class="fteam-name">${f.teamB.name}</span></span>
+        <span class="fpitch">
+          <span class="fpitch-full">${f.pitch}</span>
+          <span class="fpitch-short">P${f.pitch.replace('Pitch ', '')}</span>
+        </span>
+      </div>
+    `).join('');
+  }
+
   function renderClubFilter(){
     const select = document.getElementById('club-select');
     const optionsHtml = groupedTeams.map(g => `
@@ -422,6 +555,9 @@
   renderCrestParade();
   renderHostLogo();
   renderStats();
+  applyLiveVisibility();
+  renderLiveFixtures();
+  setInterval(() => { applyLiveVisibility(); renderLiveFixtures(); }, 30000);
 
   // Mobile hamburger menu
   const navToggle = document.getElementById('nav-toggle');
