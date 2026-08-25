@@ -192,7 +192,8 @@ h1.title .accent{ color: var(--score-amber); }
 }
 
 .hero-meta{
-  display:flex; flex-wrap:wrap; gap: 14px 34px;
+  display:none; /* hidden for now */
+  flex-wrap:wrap; gap: 14px 34px;
   margin-top: 34px;
   font-family:'Roboto Mono', monospace;
 }
@@ -279,6 +280,19 @@ ol.team-list li{
 }
 ol.team-list li:last-child{ border-bottom:none; }
 ol.team-list .tname{ color: var(--chalk); }
+
+.tname-clickable{
+  appearance: none; -webkit-appearance: none;
+  background: none; border: none; padding: 0;
+  font: inherit; text-align: left;
+  cursor: pointer;
+  transition: color .15s ease;
+}
+.tname-clickable:hover,
+.tname-clickable:focus-visible{
+  color: var(--score-amber);
+  outline: none;
+}
 
 /* Crest badges */
 .badge{
@@ -425,6 +439,8 @@ ol.team-list .tname{ color: var(--chalk); }
   .fpitch-full{ display:none; }
   .fpitch-short{ display:block; font-size: 10px; text-align:center; }
   .groups-grid{ grid-template-columns: 1fr; }
+  .group-card .group-head{ flex-direction: column; align-items: flex-start; gap: 6px; }
+  .group-head .glabel{ font-size: 18px; }
   nav.toplinks{ display:none; }
   .nav-toggle{ display:flex; }
   .mobile-nav.open{ display:flex; }
@@ -434,19 +450,20 @@ ol.team-list .tname{ color: var(--chalk); }
   .section-head{ margin-bottom: 20px; justify-content: center; text-align: center; }
   .section-note{ display: none; }
 
-  .eyebrow{ text-align: center; }
+  .eyebrow{ text-align: center; padding-top: 6px; }
   .hero-host{ text-align: center; }
 
   .hero{ padding: 40px 0 32px; }
   .hero-meta{ margin-top: 22px; gap: 12px 22px; }
   .hero-meta .value{ font-size: 17px; }
+  .hero-meta .label{ padding-top: 6px; }
 
   .scoreboard{ margin-top: 26px; }
-  .scoreboard .cell{ padding: 14px 10px; }
+  .scoreboard .cell{ padding: 14px 10px; text-align: center; }
   .scoreboard .cell .num{ font-size: 26px; }
-  .scoreboard .cell .cap{ font-size: 9.5px; margin-top: 5px; letter-spacing: 0.08em; }
+  .scoreboard .cell .cap{ font-size: 9.5px; margin-top: 5px; letter-spacing: 0.08em; padding-top: 2px; }
 
-  .crest-parade{ margin-top: 22px; gap: 8px; }
+  .crest-parade{ margin-top: 22px; gap: 8px; justify-content: center; }
   .crest-parade .badge{ width: 34px; height: 34px; padding: 3px; }
 }
 

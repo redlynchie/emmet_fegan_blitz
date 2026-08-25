@@ -13,7 +13,7 @@
 
 <header class="topbar">
   <div class="wrap topbar-inner">
-    <a class="brandmark" href="#top"><span class="dot"></span>EMMETT&nbsp;FEGAN&nbsp;BLITZ</a>
+    <a class="brandmark" href="#top"><span class="dot"></span>EMMETT&nbsp;FEGAN&nbsp;U10&nbsp;BLITZ</a>
     <nav class="toplinks">
       <a href="#groups">Groups</a>
       <a href="#fixtures">Fixtures</a>
@@ -34,7 +34,7 @@
 
 <main id="top">
   <section class="hero wrap">
-    <p class="eyebrow reveal">U10 &middot; GO Games &middot; Memorial Blitz</p>
+    <p class="eyebrow reveal">Mullahoran GFC</p>
     <div class="title-row reveal">
       <h1 class="title">Emmett Fegan<br><span class="accent">Memorial Blitz</span></h1>
       <img class="host-logo-hero" id="host-logo-hero" alt="Mullahoran GFC crest">
@@ -57,15 +57,15 @@
     <div class="scoreboard reveal">
       <div class="cell">
         <div class="num" id="stat-teams">0</div>
-        <div class="cap">Teams entered</div>
+        <div class="cap">Teams</div>
       </div>
       <div class="cell">
         <div class="num" id="stat-games">0</div>
-        <div class="cap">Games scheduled</div>
+        <div class="cap">Games</div>
       </div>
       <div class="cell">
         <div class="num" id="stat-pitches">0</div>
-        <div class="cap">Pitches in use</div>
+        <div class="cap">Pitches</div>
       </div>
     </div>
 
@@ -92,7 +92,7 @@
         <div class="club-filter">
           <label for="club-select">Club</label>
           <select id="club-select">
-            <option value="All">All clubs</option>
+            <option value="All">All Clubs</option>
           </select>
         </div>
       </div>
@@ -104,7 +104,6 @@
     <div class="wrap">
       <div class="section-head">
         <h2>On the Day</h2>
-        <p class="section-note">All players must be born on or after 1 January 2016.</p>
       </div>
       <div class="info-grid">
         <div class="info-card">
@@ -270,20 +269,28 @@
   ];
   // ---------------------------------------------------------------
 
+  const GROUP_PITCH_NAMES = { A: 'Main Pitch', B: 'Training Field' };
+
   function byGroup(teamList){
     const map = {};
     teamList.forEach(t => {
       if(!map[t.group]) map[t.group] = [];
       map[t.group].push(t);
     });
-    return Object.keys(map).sort().map(key => ({ name: `Group ${key}`, key, teams: map[key] }));
+    return Object.keys(map).sort().map(key => ({
+      name: `Group ${key}${GROUP_PITCH_NAMES[key] ? ` - ${GROUP_PITCH_NAMES[key]}` : ''}`,
+      key,
+      teams: map[key]
+    }));
   }
 
   function teamByName(name){
     return teams.find(t => t.name === name);
   }
 
-  const groupedTeams = byGroup(teams);
+  const teamsAlpha = [...teams].sort((a, b) => a.name.localeCompare(b.name));
+
+  const groupedTeams = byGroup(teamsAlpha);
 
   const fixtures = FIXTURE_LIST.map(f => ({
     round: f.round,
@@ -314,7 +321,7 @@
           ${g.teams.map(t => `
             <li>
               ${badge(t, false, true)}
-              <span class="tname">${t.name}</span>
+              <button type="button" class="tname tname-clickable" data-team="${t.name}" aria-label="View ${t.name}'s fixtures">${t.name}</button>
             </li>`).join('')}
         </ol>
       </div>
@@ -369,7 +376,7 @@
 
   function renderCrestParade(){
     const parade = document.getElementById('crest-parade');
-    parade.innerHTML = teams.map(t => badge(t, false, true)).join('');
+    parade.innerHTML = teamsAlpha.map(t => badge(t, false, true)).join('');
   }
 
   function renderHostLogo(){
@@ -404,7 +411,7 @@
   }
 
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.badge-clickable');
+    const btn = e.target.closest('.badge-clickable, .tname-clickable');
     if(!btn) return;
     goToTeamFixtures(btn.dataset.team);
   });
